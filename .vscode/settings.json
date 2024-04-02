@@ -1,0 +1,24 @@
+{
+	"sqltools.connections": [
+		{
+			"previewLimit": 50,
+			"server": "localhost",
+			"port": 5432,
+			"driver": "PostgreSQL",
+			"name": "PostgreSQL 16",
+			"database": "postgres",
+			"username": "postgres",
+			"group": "Servers"
+		},
+		{
+			"previewLimit": 50,
+			"server": "localhost",
+			"port": 5432,
+			"driver": "PostgreSQL",
+			"name": "PostgreSQL 16",
+			"group": "Tutorial Server",
+			"database": "fastapi tutorial",
+			"username": "postgres"
+		}
+	]
+}

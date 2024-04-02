@@ -1,9 +1,11 @@
 import json
+from time import time
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Response, status
 from fastapi.params import Body
 from pydantic import BaseModel, Json
 from random import randrange
+import psycopg
 
 app = FastAPI()
 
@@ -15,10 +17,22 @@ class PostContent(BaseModel):
 
 
 class Post(BaseModel):
-    post: PostContent
+    post: PostContent  
     published: bool = True
     rating: Optional[int] = None
-
+# -------------------------------------------------------------------
+# Connect to PostgreSQL DB using psycopg
+# while loop and try-except block to handle connection error
+while True:
+    try:
+        conn = psycopg.connect(host='localhost', dbname='fastapi_tutorial', user='postgres', password='ig1955')
+        cursor = conn.cursor()
+        print('Connected to PostgreSQL DB')
+        break
+    except Exception as e:
+        print(f"Error: {e} - Error connecting to PostgreSQL DB")
+        time.sleep(2)
+    
 
 # -------------------------------------------------------------------
 # my posts array

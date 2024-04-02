@@ -1,0 +1,33 @@
+Create virtual environments to allow for different versions of the same project to be created, isolated from other project environments.
+--> In terminal 'py -3 -m venv venv' to create a virtual environment called 'venv'
+--> then make sure terminal is also using virtual env by connecting it to the activate.bat file in the venv folder 'venv\Scripts\activate.bat'
+
+FastAPI is a modern, fast (high-performance), web framework for building APIs with Python 
+uvicorn is a lightning-fast ASGI (async server gateway interface) server implementation, using uvloop and httptools. Supports async processing (efficiently handle multiple req concurrently); HTTP + Websockets (handle http + real-time 2-way traffic); enables interloperability between different frameworks and servers.
+*FastAPI --> Autogenerates API documentation (2 ways to access: /docs or /redoc)
+
+
+'decorator' is a design pattern in Python that allows adding new functionality to an existing object without modifying its structure. Functions are objects - in this scenario the 'app' object (FastAPI function) is wrapping the function for the route function. You can create functions and the use them as 'decorator' variables with the @ symbol to wrap/nest other functions and add/chain functionality to them.
+You can add default status code to after route + use status.HTTP_###_action from fastapi responses module
+
+TERMINAL [ uvicorn main:app --reload ] to start webserver (main = filename, app = FastAPI object name, --reeload = auto-reload server on file changes [dev env])
+
+*The order of the route functions is important as FastAPI will match the first route function that matches the URL path. So if you have a route function that is more general and a route function that is more specific, the more specific route function should be placed first in the code.
+
+Pydantic - Why Schema needed: 
+Difficult to get values from req body without knowing structure of data beforehand
+Client can send whatever data they want
+Data isnt getting validated.
+Force client to send data in a standardised, specific format/schema that we expect.
+APIs should be designed like this --> explicitly define what the data should look like so FE devs know what to send and BE devs know what to expect.
+Pydantic models have methods that can be used on them eg. dict() to convert to dictionary, json() to convert to json, etc.
+
+DATABASES:
+Don't work or interact with DB directly --> use software DBMS to interact and send result back
+For this project --> using PostgreSQL
+Each instance of Postgres can be carved into into multiple separate/isolated DB
+Postgres requires user to specify which DB to connect to 
+pgAdmin = GUI tool to manage Postgres DBs
+UNIQUE and NULL/NOT NULL --> eg. column constraints
+
+--> *psycopg* is adapter for Python that allows interaction with Postgres DBs
