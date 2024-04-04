@@ -1,4 +1,5 @@
 import json
+from multiprocessing import synchronize
 import os
 import time
 from typing import Optional
@@ -13,7 +14,8 @@ from dotenv import load_dotenv
 # for SQLAlchemy
 from sqlalchemy.orm import Session
 from app import models
-from app.database import engine, SessionLocal
+from . import models
+from app.database import engine, get_db
 
 # from httpx import get, post (httpx library Python -HTTP client library, provides sync and async APIs)
 
@@ -27,12 +29,7 @@ DB_PASS=os.getenv('DB_PASS')
 models.Base.metadata.create_all(bind=engine)
 # create dependency for route handlers (func to create db Session to interact with DB)
 # Session starts when request is received and ends when response is sent
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db # yield keyword vs return --> makes it a generator function
-    finally:
-        db.close()
+
 
 app = FastAPI()
 
@@ -61,10 +58,63 @@ while True:
     except Exception as e:
         print(f"Error: {e} - Error connecting to PostgreSQL DB")
         time.sleep(2)
-# --------------------------USING SQL Alechemy-----------------------------------------   
-@app.get('/sqlalchemy')
-def test_posts(db: Session = Depends(get_db)):
-    return{"status": "success"}
+# --------------------------USING SQL Alechemy-----------------------------------------  
+# GET ALL POSTS
+@app.get('/posts/sqlalchemy/')
+def get_posts(db: Session = Depends(get_db)):
+    posts = db.query(models.Post).all()
+    return{"data": posts}
+
+# GET SINGLE POST BY ID
+@app.get('/posts/sqlalchemy/{post_id}')
+def get_post(post_id: int, db: Session = Depends(get_db)):
+    post = db.query(models.Post).filter(models.Post.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail=f'Post with id {post_id} not found')
+    return{"data": post}
+
+#CREATE NEW POST
+#use post.dict() to convert model to dictonary for when you have a lot of different fields.
+#--> then need to use **post.dict() to unpack the dictionary into the function
+# eg. new_post = models.Post(**post.dict())
+@app.post('/posts/sqlalchemy/')
+def create_post(db: Session = Depends(get_db)):
+    new_post = models.Post(title='Test Posting new post', content='This is a test post', published=True)
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post) #similar to RETURNING
+    return{"data": f'New post created {new_post.title} with id {new_post.id}'}
+#UPDATE POST
+@app.put('/posts/sqlalchemy/{post_id}')
+def update_post(post_id: int, db: Session = Depends(get_db)):
+    updated_post = db.query(models.Post).filter(models.Post.id == post_id).first()
+    if not updated_post:
+        raise HTTPException(status_code=404, detail=f'Post with id {post_id} not found')
+    updated_post.title = 'Updated Post Title'
+    db.commit()
+    db.refresh(updated_post)
+    return{"data": f'Post with id {post_id} updated'}
+@app.put('/posts/sqlalchemy/{post_id}')
+
+# alternative if you want client to pass update params. *Note that you need to pass the payload as a dictionary + add pydanctic model for payload
+# def update_post(post_id: int, payload: UpdatePostPayload, db: Session = Depends(get_db)):
+#     updated_post = db.query(models.Post).filter(models.Post.id == post_id).first()
+#     if not updated_post:
+#         raise HTTPException(status_code=404, detail=f'Post with id {post_id} not found')
+#     updated_post.title = payload.title
+#     db.commit()
+#     db.refresh(updated_post)
+#     return{"data": f'Post with id {post_id} updated'}
+# #DELETE POST
+@app.delete('/posts/sqlalchemy/{post_id}')
+def delete_post(post_id: int, db: Session = Depends(get_db)):
+    deleted_post = db.query(models.Post).filter(models.Post.id == post_id).first()
+    if not deleted_post:
+        raise HTTPException(status_code=404, detail=f'Post with id {post_id} not found')
+    # deleted_post.delete(synchronize_session=False) #synchronize_session=False to avoid error -?not working properly?
+    db.delete(deleted_post)
+    db.commit()
+    return{"data": f'Post with id {post_id} deleted'}
     
 # -------------------------------------------------------------------
 # my posts array
