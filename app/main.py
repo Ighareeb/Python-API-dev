@@ -2,12 +2,19 @@ import json
 import os
 import time
 from typing import Optional
-from fastapi import FastAPI, HTTPException, Response, status
+from fastapi import FastAPI, HTTPException, Response, status, Depends
 from fastapi.params import Body
 import psycopg
 from pydantic import BaseModel, Json
 from random import randrange
 from dotenv import load_dotenv
+
+
+# for SQLAlchemy
+from sqlalchemy.orm import Session
+from app import models
+from app.database import engine, SessionLocal
+
 # from httpx import get, post (httpx library Python -HTTP client library, provides sync and async APIs)
 
 load_dotenv()
@@ -16,6 +23,16 @@ DB_NAME=os.getenv('DB_NAME')
 DB_USER=os.getenv('DB_USER')
 DB_PASS=os.getenv('DB_PASS')
 
+# Create models defined in model.py  
+models.Base.metadata.create_all(bind=engine)
+# create dependency for route handlers (func to create db Session to interact with DB)
+# Session starts when request is received and ends when response is sent
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db # yield keyword vs return --> makes it a generator function
+    finally:
+        db.close()
 
 app = FastAPI()
 
@@ -44,8 +61,11 @@ while True:
     except Exception as e:
         print(f"Error: {e} - Error connecting to PostgreSQL DB")
         time.sleep(2)
+# --------------------------USING SQL Alechemy-----------------------------------------   
+@app.get('/sqlalchemy')
+def test_posts(db: Session = Depends(get_db)):
+    return{"status": "success"}
     
-
 # -------------------------------------------------------------------
 # my posts array
 # my_posts = [
