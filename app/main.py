@@ -4,11 +4,11 @@ import time
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Response, status
 from fastapi.params import Body
-from httpx import get
+import psycopg
 from pydantic import BaseModel, Json
 from random import randrange
-import psycopg
 from dotenv import load_dotenv
+# from httpx import get, post (httpx library Python -HTTP client library, provides sync and async APIs)
 
 load_dotenv()
 DB_HOST=os.getenv('DB_HOST')
@@ -21,15 +21,17 @@ app = FastAPI()
 
 
 # Validation --> Pydantic Schema models that extends BaseModel
-class PostContent(BaseModel):
-    title: str
-    content: str
+# class PostContent(BaseModel):
+#     title: str
+#     content: str
 
 
 class Post(BaseModel):
-    post: PostContent  
-    published: bool = True
-    rating: Optional[int] = None
+    # post: PostContent  
+    title: str
+    content: str
+    published: bool  
+    # rating: Optional[int] = None
 # -------------------------------------------------------------------
 # Connect to PostgreSQL DB using psycopg
 # while loop and try-except block to handle connection error
@@ -46,20 +48,20 @@ while True:
 
 # -------------------------------------------------------------------
 # my posts array
-my_posts = [
-    {
-        "post": {"title": "Post 1", "content": "Content 1"},
-        "published": True,
-        "rating": 5,
-        "postId": 1,
-    },
-]
+# my_posts = [
+#     {
+#         "post": {"title": "Post 1", "content": "Content 1"},
+#         "published": True,
+#         "rating": 5,
+#         "postId": 1,
+#     },
+# ]
 
 
-def find_post_by_id(post_id: int):
-    for p in my_posts:
-        if p["postId"] == post_id:
-            return p
+# def find_post_by_id(post_id: int):
+#     for p in my_posts:
+#         if p["postId"] == post_id:
+#             return p
 
 
 # -------------------------------------------------------------------
@@ -76,24 +78,35 @@ def find_post_by_id(post_id: int):
 @app.get("/posts")
 def get_posts():
     # return {"message": "Get all Posts", "data": "All Posts"}
-    return {"data": my_posts}
+    # return {"data": my_posts}
+    cursor.execute("SELECT * FROM posts")
+    posts = cursor.fetchall()
+    print(posts)
+    return {"data": posts}
 
 
 # GET latest post (order matters since route would be consider a match with GET single post route)
 @app.get("/posts/latest")
 def get_latest_post():
-    post = my_posts[len(my_posts) - 1]
-    return {"data": post}
+    # post = my_posts[len(my_posts) - 1]
+    # return {"data": post}
+    cursor.execute("SELECT * FROM posts ORDER BY post_id DESC LIMIT 1")
+    latest_post = cursor.fetchone() 
+    print(latest_post)
+    return{"data": latest_post}
 
 
-# GET - SINGLE POST
+# GET - SINGLE POST BY ID
 @app.get("/posts/{post_id}")
-def get_post(post_id: int, response: Response):
-    post = find_post_by_id(post_id)
+# def get_post(post_id: int, response: Response):
+def get_post(post_id: int):
+    # post = find_post_by_id(post_id)
+    cursor.execute("SELECT * FROM posts WHERE id = %s", (post_id,) )
+    post = cursor.fetchone()
     if not post:
         # 1. hard-coded response
         # response.status_code = status.HTTP_404_NOT_FOUND
-        # return {"message": f"Post with id {post_id} not found"}
+        # return {"message": f"Post with id {post_id} not found"} 
         # 2. using HTTPException from fastapi
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -114,45 +127,58 @@ def get_post(post_id: int, response: Response):
 # similar as above but using Pydantic
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
 def create_post(payload: Post):
-    post_dict = payload.model_dump()
-    post_dict["postId"] = randrange(0, 1000000000000)
-    print(payload)
-    print(post_dict)  # model_dump since dict() is deprecated
-    my_posts.append(post_dict)
+    # !!!if you use string interpolation then you are vulnerable to SQL injection
+    cursor.execute("INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *", (payload.title, payload.content, payload.published))
+    new_post = cursor.fetchone()
+    conn.commit()
+    return {"data": new_post}
+    # post_dict = payload.model_dump()
+    # post_dict["postId"] = randrange(0, 1000000000000)
+    # print(payload)
+    # print(post_dict)  # model_dump since dict() is deprecated
+    # my_posts.append(post_dict)
     # return {
     #     "new_post": f"title: {payload.post.title} content: {payload.post.content} published: {payload.published} rating: {payload.rating}"
     # }
-    return {"data": post_dict}
 
 
 # -------------------------------------------------------------------
 # UPDATE - UPDATE POST
 @app.put("/posts/{post_id}", status_code=status.HTTP_200_OK)
 def update_post(post_id: int, payload: Post):
-    post = find_post_by_id(post_id)
-    if not post:
+    cursor.execute("""UPDATE public.posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *""", (payload.title, payload.content, payload.published, post_id))
+    updated_post = cursor.fetchone()
+    conn.commit()
+    if not updated_post:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Post with id {post_id} not found",
         )
-    if post:
-        for i, p in enumerate(my_posts):
-            updated_post = payload.model_dump()
-            updated_post["postId"] = post_id
-            my_posts[i] = updated_post
-            return {"message": f"Post with id {post_id} updated", "data": post}
+    return {"message": f"Post with id {post_id} updated", "data": updated_post}
+    # post = find_post_by_id(post_id)
+    # if post:
+    #     for i, p in enumerate(my_posts):
+    #         updated_post = payload.model_dump()
+    #         updated_post["postId"] = post_id
+    #         my_posts[i] = updated_post
+    #         return {"message": f"Post with id {post_id} updated", "data": post}
 
 
 # -------------------------------------------------------------------
 # DELETE - DELETE POST
 @app.delete("/posts/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(post_id: int):
-    post = find_post_by_id(post_id)
-    if not post:
+    # post = find_post_by_id(post_id)
+    # cursor.execute("SELECT * FROM posts where id = %s ", (post_id,))
+    cursor.execute("DELETE FROM posts WHERE id = %s RETURNING *", (post_id,))
+    deleted_post = cursor.fetchone()
+    print(deleted_post)
+    conn.commit()
+    if not deleted_post:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Post with id {post_id} not found",
         )
-    my_posts.remove(post)
+    # my_posts.remove(post)
     # return Response(status_code=status.HTTP_204_NO_CONTENT)
     return {"message": f"Post with id {post_id} deleted"}

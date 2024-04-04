@@ -31,3 +31,31 @@ pgAdmin = GUI tool to manage Postgres DBs
 UNIQUE and NULL/NOT NULL --> eg. column constraints
 
 --> *psycopg* is adapter for Python that allows interaction with Postgres DBs
+https://www.psycopg.org/psycopg3/docs/basic/usage.html
+Use psycopg db control structure --> cursor  to perform DB operations (execute queries, fetch results, etc) that can be added to route handling logic
+!SQL injection attack - don't use f-strings for variables use %s + SQL library offers functionality to sanitise endpoints
+need to commit staged changes --> when adding to DB (conn.commit())
+
+For Python Apps(+other languages)  - Different ways to interact with DB
+- example so far was using default Postgres driver/adaptor to send raw SQL commands to the DB
+*--> A Popular method ORM (Object Relational Mapping) uses a layer of abstractions between code and DB so you can use Python code/objects/features to perform all DB ops (no SQL) [i.e. interact with ORM, which basically uses the drivers you would have employed if you were writing raw SQL, that will convert Python code to SQL commands] 
+[SQLAlchemy very popular] - WHAT CAN YOU DO WITH ORMs (key features):
+Instead of manually defining tables in postgres - define tables as Python classes/models
+Query in Python code (no SQL necessary), chaining methods.
+class Post(Base):
+	__tablename__ = 'posts'
+	id = Column(Integer, primary_key=True, index=True)
+	title = Column(String, index=True, nullable=False)
+	content = Column(String, nullable=False)
+	published = Column(Boolean, default=False)
+
+db.query(models.Post).filter(models.Post.id = id).first()
+
+**to handle DB connect when using SQLAlchemy ORM, we need to create a database.py file in the app directory
+-->installed SQLAlchemy and import required components to create DB and start session
+
+*SQLAlchemy has the code to write Python (eg. define models) but doesn't 'actually know how to talk to the DB' ----> so need DB Driver (eg. psycopg)
+
+
+
+
