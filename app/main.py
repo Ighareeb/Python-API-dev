@@ -6,7 +6,8 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException, Response, status, Depends
 from fastapi.params import Body
 import psycopg
-from pydantic import BaseModel, Json
+# from pydantic import BaseModel, Json - moved schema to separate file
+from app.schemas import Post, resPost
 from random import randrange
 from dotenv import load_dotenv
 
@@ -34,18 +35,7 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 
-# Validation --> Pydantic Schema models that extends BaseModel
-# class PostContent(BaseModel):
-#     title: str
-#     content: str
 
-
-class Post(BaseModel):
-    # post: PostContent  
-    title: str
-    content: str
-    published: bool  
-    # rating: Optional[int] = None
 # -------------------------------------------------------------------
 # Connect to PostgreSQL DB using psycopg
 # while loop and try-except block to handle connection error
@@ -63,15 +53,15 @@ while True:
 @app.get('/posts/sqlalchemy/')
 def get_posts(db: Session = Depends(get_db)):
     posts = db.query(models.Post).all()
-    return{"data": posts}
+    return posts
 
 # GET SINGLE POST BY ID
-@app.get('/posts/sqlalchemy/{post_id}')
+@app.get('/posts/sqlalchemy/{post_id}', response_model=resPost)
 def get_post(post_id: int, db: Session = Depends(get_db)):
     post = db.query(models.Post).filter(models.Post.id == post_id).first()
     if not post:
         raise HTTPException(status_code=404, detail=f'Post with id {post_id} not found')
-    return{"data": post}
+    return post
 
 #CREATE NEW POST
 #use post.dict() to convert model to dictonary for when you have a lot of different fields.
@@ -83,7 +73,7 @@ def create_post(db: Session = Depends(get_db)):
     db.add(new_post)
     db.commit()
     db.refresh(new_post) #similar to RETURNING
-    return{"data": f'New post created {new_post.title} with id {new_post.id}'}
+    return new_post.title, new_post.id
 #UPDATE POST
 @app.put('/posts/sqlalchemy/{post_id}')
 def update_post(post_id: int, db: Session = Depends(get_db)):
@@ -93,7 +83,7 @@ def update_post(post_id: int, db: Session = Depends(get_db)):
     updated_post.title = 'Updated Post Title'
     db.commit()
     db.refresh(updated_post)
-    return{"data": f'Post with id {post_id} updated'}
+    return post_id
 @app.put('/posts/sqlalchemy/{post_id}')
 
 # alternative if you want client to pass update params. *Note that you need to pass the payload as a dictionary + add pydanctic model for payload
@@ -114,7 +104,7 @@ def delete_post(post_id: int, db: Session = Depends(get_db)):
     # deleted_post.delete(synchronize_session=False) #synchronize_session=False to avoid error -?not working properly?
     db.delete(deleted_post)
     db.commit()
-    return{"data": f'Post with id {post_id} deleted'}
+    return post_id
     
 # -------------------------------------------------------------------
 # my posts array
@@ -152,7 +142,7 @@ def get_posts():
     cursor.execute("SELECT * FROM posts")
     posts = cursor.fetchall()
     print(posts)
-    return {"data": posts}
+    return posts
 
 
 # GET latest post (order matters since route would be consider a match with GET single post route)
@@ -163,7 +153,7 @@ def get_latest_post():
     cursor.execute("SELECT * FROM posts ORDER BY post_id DESC LIMIT 1")
     latest_post = cursor.fetchone() 
     print(latest_post)
-    return{"data": latest_post}
+    return latest_post
 
 
 # GET - SINGLE POST BY ID
@@ -182,7 +172,7 @@ def get_post(post_id: int):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Post with id {post_id} not found",
         )
-    return {"data": post}
+    return post
 
 
 # -------------------------------------------------------------------
@@ -201,7 +191,7 @@ def create_post(payload: Post):
     cursor.execute("INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *", (payload.title, payload.content, payload.published))
     new_post = cursor.fetchone()
     conn.commit()
-    return {"data": new_post}
+    return new_post
     # post_dict = payload.model_dump()
     # post_dict["postId"] = randrange(0, 1000000000000)
     # print(payload)
@@ -224,7 +214,7 @@ def update_post(post_id: int, payload: Post):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Post with id {post_id} not found",
         )
-    return {"message": f"Post with id {post_id} updated", "data": updated_post}
+    return post_id
     # post = find_post_by_id(post_id)
     # if post:
     #     for i, p in enumerate(my_posts):
@@ -251,4 +241,4 @@ def delete_post(post_id: int):
         )
     # my_posts.remove(post)
     # return Response(status_code=status.HTTP_204_NO_CONTENT)
-    return {"message": f"Post with id {post_id} deleted"}
+    return post_id

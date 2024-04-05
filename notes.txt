@@ -58,4 +58,10 @@ db.query(models.Post).filter(models.Post.id = id).first()
 *NOTE - when creating table from models - if table already exists no new table will be created - so if you modify table model you need to drop the table and recreate it
 ---> Normally use 'Alembiuc' to handle this - a migration tool that can initiailise dbs, handle changes to DB schema
 
+DIFFERENCE BETWEEN Schema and Pydantic Model (WE NEED BOTH MODELS):
+Pydantic (library) model --> BaseModel referred to as schema.  Define structure of req/res data. Validates structure and data types for fields + convert to/from JSON.
+SQLAlchemy (library) model --> ORM Base model. Define columns/attributes + data types of DB tables. Used to interact (CRUD) with DB.
+--> To use Res Models need to add response_model param to route function @app.method('/route', response_model=ModelName) - FastAPI will validate and convert response data to model schema 
+(note for get all post need to use List[ModelName] as response_model + import List from typing module)
+
 
