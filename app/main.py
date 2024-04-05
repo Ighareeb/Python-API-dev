@@ -1,3 +1,4 @@
+import email
 import json
 from multiprocessing import synchronize
 import os
@@ -7,16 +8,19 @@ from fastapi import FastAPI, HTTPException, Response, status, Depends
 from fastapi.params import Body
 import psycopg
 # from pydantic import BaseModel, Json - moved schema to separate file
-from app.schemas import Post, resPost
+from app import models
+from sqlalchemy.orm import Session
+
+from app.models import Post, User
+from app.database import engine, get_db
+from sqlalchemy.exc import IntegrityError
+
+from app.schemas import CreatePost, Post, CreateUser, User, resPost
 from random import randrange
 from dotenv import load_dotenv
 
 
-# for SQLAlchemy
-from sqlalchemy.orm import Session
-from app import models
-from . import models
-from app.database import engine, get_db
+
 
 # from httpx import get, post (httpx library Python -HTTP client library, provides sync and async APIs)
 
@@ -68,12 +72,14 @@ def get_post(post_id: int, db: Session = Depends(get_db)):
 #--> then need to use **post.dict() to unpack the dictionary into the function
 # eg. new_post = models.Post(**post.dict())
 @app.post('/posts/sqlalchemy/')
-def create_post(db: Session = Depends(get_db)):
-    new_post = models.Post(title='Test Posting new post', content='This is a test post', published=True)
+# def create_post(db: Session = Depends(get_db)):
+#     new_post = models.Post(title='Test Posting new post', content='This is a test post', published=True)
+def create_post(post: CreatePost, db: Session = Depends(get_db)):
+    new_post = models.Post(title=post.title, content=post.content, published=post.published)
     db.add(new_post)
     db.commit()
     db.refresh(new_post) #similar to RETURNING
-    return new_post.title, new_post.id
+    return new_post
 #UPDATE POST
 @app.put('/posts/sqlalchemy/{post_id}')
 def update_post(post_id: int, db: Session = Depends(get_db)):
@@ -105,12 +111,29 @@ def delete_post(post_id: int, db: Session = Depends(get_db)):
     db.delete(deleted_post)
     db.commit()
     return post_id
-    
+# ----------------USERS---------------------------------------------
+# CREATE NEW USER
+@app.post('/users', status_code=status.HTTP_201_CREATED)
+def create_user(user: CreateUser, db: Session = Depends(get_db)):
+    new_user = models.User(email=user.email, password=user.password)
+    db.add(new_user)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail='Email already exists')
+    db.refresh(new_user)
+    return new_user
+# GET ALL USERS
+@app.get('/users')
+def get_posts(db: Session = Depends(get_db)):
+    users = db.query(models.User).all()
+    return users
 # -------------------------------------------------------------------
 # my posts array
 # my_posts = [
 #     {
-#         "post": {"title": "Post 1", "content": "Content 1"},
+#         "post": {"title": "Post 1", "content": " Content 1"},
 #         "published": True,
 #         "rating": 5,
 #         "postId": 1,
@@ -242,3 +265,4 @@ def delete_post(post_id: int):
     # my_posts.remove(post)
     # return Response(status_code=status.HTTP_204_NO_CONTENT)
     return post_id
+

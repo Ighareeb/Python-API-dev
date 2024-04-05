@@ -15,7 +15,7 @@ TERMINAL [ uvicorn main:app --reload ] to start webserver (main = filename, app 
 *The order of the route functions is important as FastAPI will match the first route function that matches the URL path. So if you have a route function that is more general and a route function that is more specific, the more specific route function should be placed first in the code.
 
 Pydantic - Why Schema needed: 
-Difficult to get values from req body without knowing structure of data beforehand
+Difficult to get valueswor from req body without knowing structure of data beforehand
 Client can send whatever data they want
 Data isnt getting validated.
 Force client to send data in a standardised, specific format/schema that we expect.
@@ -64,4 +64,5 @@ SQLAlchemy (library) model --> ORM Base model. Define columns/attributes + data 
 --> To use Res Models need to add response_model param to route function @app.method('/route', response_model=ModelName) - FastAPI will validate and convert response data to model schema 
 (note for get all post need to use List[ModelName] as response_model + import List from typing module)
 
-
+HANDLING USER REGISTRATION:
+need to create model for user registration data (Pydantic model) + model for user data in DB (SQLAlchemy model)

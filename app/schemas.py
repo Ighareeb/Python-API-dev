@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 # REQUEST MODELS
 class Post(BaseModel):
@@ -10,8 +10,8 @@ class Post(BaseModel):
     # rating: Optional[int] = None
 
 # EXAMPLE by using separate classes/models for different CRUD, able to define different rules. eg user can't update certain fields
-# class CreatePost(Post):
-#     pass  
+class CreatePost(Post):
+    pass  
 # # pass keyword acts as placeholder. Since CreatePost is extending Post, it will inherit all the fields from Post, so pass just means no other changes to 'Post' BaseModel
     
 # class UpdatePost(Post):
@@ -26,5 +26,20 @@ class resPost(BaseModel):
     published: bool 
     # created_at: datetime
     class Config:
-        orm_mode = True 
+        from_attributes = True 
 # need to add Config class because Pydantic models are not the same as SQLAlchemy models. They use dictionsaries to store data, while SQLAlchemy uses objects. So need to tell Pydantic to treat the SQLAlchemy model as a dictionary.
+
+
+# USER MODELS
+
+class CreateUser(BaseModel):
+    email: EmailStr
+    password: str
+    
+class User(BaseModel):
+    id: int
+    email: str
+    created_at: datetime
+    # don't want to return password!
+    class Config:
+        from_attributes = True
