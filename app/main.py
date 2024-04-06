@@ -134,6 +134,13 @@ def create_user(user: CreateUser, db: Session = Depends(get_db)):
 def get_posts(db: Session = Depends(get_db)):
     users = db.query(models.User).all()
     return users
+# GET USER (by id) - see notes
+@app.get('/users/{user_id}', response_model=User)
+def get_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'User with id {user_id} not found')
+    return user
 # -------------------------------------------------------------------
 # my posts array
 # my_posts = [

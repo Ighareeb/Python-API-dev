@@ -68,3 +68,6 @@ HANDLING USER REGISTRATION:
 need to create model for user registration data (Pydantic model) + model for user data in DB (SQLAlchemy model)
 
 hashing user password --> install passlib package + Bcrypt library (hashing algorithm)
+
+# GET USER (by id) - can be used as part of auth process
+# depending on how FE is set up eg. when using JWT (sent as cookies so won't know you are logged in) so APIs often have endpoints that retrieve user info based on token to stay logged in OR eg. on social media site to see other users' profiles
