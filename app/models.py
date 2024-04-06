@@ -20,6 +20,7 @@ class User(Base):
     password = Column(String, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()')) 
 
+
 # note for ID - not specifying autoincrement=True/serial data type since RBDs automatically treat primary_key columns as autoincrementing.
 
 

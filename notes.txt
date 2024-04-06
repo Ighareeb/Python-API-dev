@@ -66,3 +66,5 @@ SQLAlchemy (library) model --> ORM Base model. Define columns/attributes + data 
 
 HANDLING USER REGISTRATION:
 need to create model for user registration data (Pydantic model) + model for user data in DB (SQLAlchemy model)
+
+hashing user password --> install passlib package + Bcrypt library (hashing algorithm)

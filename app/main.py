@@ -3,7 +3,7 @@ import json
 from multiprocessing import synchronize
 import os
 import time
-from typing import Optional
+from typing import List, Optional
 from fastapi import FastAPI, HTTPException, Response, status, Depends
 from fastapi.params import Body
 import psycopg
@@ -14,8 +14,8 @@ from sqlalchemy.orm import Session
 from app.models import Post, User
 from app.database import engine, get_db
 from sqlalchemy.exc import IntegrityError
-
 from app.schemas import CreatePost, Post, CreateUser, User, resPost
+from app.utils import hash
 from random import randrange
 from dotenv import load_dotenv
 
@@ -29,6 +29,7 @@ DB_HOST=os.getenv('DB_HOST')
 DB_NAME=os.getenv('DB_NAME')
 DB_USER=os.getenv('DB_USER')
 DB_PASS=os.getenv('DB_PASS')
+
 
 # Create models defined in model.py  
 models.Base.metadata.create_all(bind=engine)
@@ -113,9 +114,13 @@ def delete_post(post_id: int, db: Session = Depends(get_db)):
     return post_id
 # ----------------USERS---------------------------------------------
 # CREATE NEW USER
-@app.post('/users', status_code=status.HTTP_201_CREATED)
+@app.post('/users', status_code=status.HTTP_201_CREATED, response_model=User)
 def create_user(user: CreateUser, db: Session = Depends(get_db)):
-    new_user = models.User(email=user.email, password=user.password)
+    # hash password:
+    hased_password = hash(user.password)
+    user.password = hased_password
+    # new_user = models.User(email=user.email, password=user.password)
+    new_user = models.User(**user.model_dump())
     db.add(new_user)
     try:
         db.commit()
@@ -125,7 +130,7 @@ def create_user(user: CreateUser, db: Session = Depends(get_db)):
     db.refresh(new_user)
     return new_user
 # GET ALL USERS
-@app.get('/users')
+@app.get('/users', response_model=List[User])
 def get_posts(db: Session = Depends(get_db)):
     users = db.query(models.User).all()
     return users
