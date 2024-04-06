@@ -83,5 +83,6 @@ There are several __init__.py files: one in each directory or subdirectory.
 It indicates dir should be treated as a python package (that can be imported)
 so subdirectories can be imported as modules ('sub'-modules)
 
-
+NEXT --> how to group FASTAPI documentation into groups to organise readability/access of different route groups
+add tag in the router object created in the router files
 

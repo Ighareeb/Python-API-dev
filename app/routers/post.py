@@ -5,15 +5,16 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas import CreatePost, Post, resPost
 
-router = APIRouter()
-
-@router.get('/posts/sqlalchemy/')
+router = APIRouter(prefix='/posts/sqlalchemy', tags=['Posts'])
+# can use prefic param to simplify code when defining paths
+# tag param to group paths together in the FastAPI docs
+@router.get('/')
 def get_posts(db: Session = Depends(get_db)):
     posts = db.query(models.Post).all()
     return posts
 
 # GET SINGLE POST BY ID
-@router.get('/posts/sqlalchemy/{post_id}', response_model=resPost)
+@router.get('/{post_id}', response_model=resPost)
 def get_post(post_id: int, db: Session = Depends(get_db)):
     post = db.query(models.Post).filter(models.Post.id == post_id).first()
     if not post:
@@ -24,7 +25,7 @@ def get_post(post_id: int, db: Session = Depends(get_db)):
 #use post.dict() to convert model to dictonary for when you have a lot of different fields.
 #--> then need to use **post.dict() to unpack the dictionary into the function
 # eg. new_post = models.Post(**post.dict())
-@router.post('/posts/sqlalchemy/')
+@router.post('/')
 # def create_post(db: Session = Depends(get_db)):
 #     new_post = models.Post(title='Test Posting new post', content='This is a test post', published=True)
 def create_post(post: CreatePost, db: Session = Depends(get_db)):
@@ -34,7 +35,7 @@ def create_post(post: CreatePost, db: Session = Depends(get_db)):
     db.refresh(new_post) #similar to RETURNING
     return new_post
 #UPDATE POST
-@router.put('/posts/sqlalchemy/{post_id}')
+@router.put('/{post_id}')
 def update_post(post_id: int, db: Session = Depends(get_db)):
     updated_post = db.query(models.Post).filter(models.Post.id == post_id).first()
     if not updated_post:
@@ -43,8 +44,8 @@ def update_post(post_id: int, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(updated_post)
     return post_id
-@router.put('/posts/sqlalchemy/{post_id}')
 
+# @router.put('/{post_id}')
 # alternative if you want client to pass update params. *Note that you need to pass the payload as a dictionary + add pydanctic model for payload
 # def update_post(post_id: int, payload: UpdatePostPayload, db: Session = Depends(get_db)):
 #     updated_post = db.query(models.Post).filter(models.Post.id == post_id).first()
@@ -55,7 +56,7 @@ def update_post(post_id: int, db: Session = Depends(get_db)):
 #     db.refresh(updated_post)
 #     return{"data": f'Post with id {post_id} updated'}
 # #DELETE POST
-@router.delete('/posts/sqlalchemy/{post_id}')
+@router.delete('/{post_id}')
 def delete_post(post_id: int, db: Session = Depends(get_db)):
     deleted_post = db.query(models.Post).filter(models.Post.id == post_id).first()
     if not deleted_post:

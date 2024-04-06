@@ -7,9 +7,9 @@ from sqlalchemy.exc import IntegrityError
 from typing import List
 from app.utils import hash
 
-router = APIRouter()
+router = APIRouter(prefix='/users', tags=['Users'])
 # CREATE NEW USER
-@router.post('/users', status_code=status.HTTP_201_CREATED, response_model=User)
+@router.post('/', status_code=status.HTTP_201_CREATED, response_model=User)
 def create_user(user: CreateUser, db: Session = Depends(get_db)):
     # hash password:
     hased_password = hash(user.password)
@@ -25,12 +25,12 @@ def create_user(user: CreateUser, db: Session = Depends(get_db)):
     db.refresh(new_user)
     return new_user
 # GET ALL USERS
-@router.get('/users', response_model=List[User])
+@router.get('/', response_model=List[User])
 def get_posts(db: Session = Depends(get_db)):
     users = db.query(models.User).all()
     return users
 # GET USER (by id) - see notes
-@router.get('/users/{user_id}', response_model=User)
+@router.get('/{user_id}', response_model=User)
 def get_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
