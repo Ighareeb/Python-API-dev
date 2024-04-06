@@ -71,3 +71,17 @@ hashing user password --> install passlib package + Bcrypt library (hashing algo
 
 # GET USER (by id) - can be used as part of auth process
 # depending on how FE is set up eg. when using JWT (sent as cookies so won't know you are logged in) so APIs often have endpoints that retrieve user info based on token to stay logged in OR eg. on social media site to see other users' profiles
+
+HOW TO MODULARISE ROUTES INTO SEPARATE FILES IN FASTAPI USING 'ROUTERS':
+Want to clean up code and make it more readable and maintainable so split Post/User routes into separate files
+--> create a new file for each route eg. post.py and user.py
+--> import router object into main.py and each of the route files ---> create a router object in each file and add route functions to the router object
+in main.py: import files with router object defining paths --> then app.include_router(routefilename.router)
+--> add the router object to the main FastAPI app object in main.py
+**note :
+There are several __init__.py files: one in each directory or subdirectory.
+It indicates dir should be treated as a python package (that can be imported)
+so subdirectories can be imported as modules ('sub'-modules)
+
+
+
