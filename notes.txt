@@ -86,3 +86,30 @@ so subdirectories can be imported as modules ('sub'-modules)
 NEXT --> how to group FASTAPI documentation into groups to organise readability/access of different route groups
 add tag in the router object created in the router files
 
+**------------AUTHENTICATION-------------**
+1. Session-based Auth --> store user data in memory/DB/session(cookie) on BE server or API server to track user (logged in or not)
+2. JWT based Auth --> 'stateless', self-contained - no user data stored on server. User data stored in token (encrypted) and sent to client. Client sends token with each req to server. Server decrypts token to verify user. JWT token can be stored in client FE in secure cookie or local storage/session storage.
+JWT flow: Client sends login req (username+pw) to server API login route --> IF VALID client credentials are used to create JWT Token which is sent back to client --> Client stores token and it is sent with each req (in req HEADERS) to server --> Server decrypts token to verify token/user before sending response.
+JWT Token made of 3 components: 
+	1. HEADER (token type [JWT] + hashing algo [default HS256]), 
+	2. PAYLOAD (data), 
+	**NOTE - token itself is not encrypted so don't send sensitive data in payload eg. usually embed user id or user role. Too much data increases size of token/packet which wastes bandwidth unnecessarily (slows down reqs)
+	3. SIGNATURE (need to create) by signing ==> HEADER + PAYLOAD [+ SECRET](special pw/key kept on server/API used to sign token) --> all get combined and hashed together using SECRET to create signature
+	So Header, Payload and Signature get sent to client. Secret kept on server and used to verify signature of tokens sent in reqs
+	SECRET is a key used to sign and verify tokens. ONLY SERVER SHOULD HAVE ACCESS TO IT.
+	Server will know if token has been tampered, as signature will be different (eg. any modification to any part changes signature like changing payload data or the header)
+	So more for ensuring data integrity, token info and verification rather than encrypting data.
+
+*In this project using JWT Tokens for Auth:
+User sends login req to API with username, pw. We verify with user-data stored in DB. However DB configured to store hashed password (hashing is only one way! so can't unhash to compare) therefore need to hash (using same hashing function) the password sent in req and compare with hashed password in DB.
+If user valid then token sent back to client.
+
+--create auth.py router
+
+
+
+
+
+
+
+

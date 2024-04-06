@@ -43,3 +43,8 @@ class User(BaseModel):
     # don't want to return password!
     class Config:
         from_attributes = True
+
+# AUTHENTICATION SCHEMA MODEL
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
