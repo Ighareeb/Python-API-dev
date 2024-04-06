@@ -64,6 +64,8 @@ SQLAlchemy (library) model --> ORM Base model. Define columns/attributes + data 
 --> To use Res Models need to add response_model param to route function @app.method('/route', response_model=ModelName) - FastAPI will validate and convert response data to model schema 
 (note for get all post need to use List[ModelName] as response_model + import List from typing module)
 
+FastAPI dependencies are functions that run before the route function is executed. They can be used to perform operations that are common to multiple route functions (eg. DB connection, authentication, etc). They can also be used to validate data before it is passed to the route function.
+
 HANDLING USER REGISTRATION:
 need to create model for user registration data (Pydantic model) + model for user data in DB (SQLAlchemy model)
 
@@ -104,8 +106,10 @@ JWT Token made of 3 components:
 User sends login req to API with username, pw. We verify with user-data stored in DB. However DB configured to store hashed password (hashing is only one way! so can't unhash to compare) therefore need to hash (using same hashing function) the password sent in req and compare with hashed password in DB.
 If user valid then token sent back to client.
 
---create auth.py router
-
+--create auth.py router (also created util function to hash password from req)
+pip install python-jose[cryptography] -->to generate and verifty JWT token [cryptography] BE
+pip install passlib[bcrypt] --> to hash passwords bcrypt algo
+(need to create a passlib context to hash pw)
 
 
 

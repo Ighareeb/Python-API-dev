@@ -1,6 +1,8 @@
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
 
+from app.database import Base
+
 # REQUEST MODELS
 class Post(BaseModel):
     # post: PostContent  
@@ -48,3 +50,10 @@ class User(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+# # Token schema model
+# class Token(BaseModel):
+#     access_token: str
+#     token_type: str
+
+    
