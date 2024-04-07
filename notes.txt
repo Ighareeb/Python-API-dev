@@ -124,6 +124,7 @@ this allows for dynamic updating of environment variables
 SETTING UP RELATIONSHIP BETWEEN POSTS-USERS tables
 User --> Post (1 to many relationship) - 1 user can have many posts
 need to create foreign key in Post table that references the id of the User table
+*SQLAlchemy ORM - to create relationship between tables need to use 'relationship' method/function in both models and have access to user/posts in the model + back_populates keeps models in sync (eg. if user is deleted then posts are deleted)
 
 
 
