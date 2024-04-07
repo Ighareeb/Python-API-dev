@@ -112,6 +112,18 @@ pip install python-jose[cryptography] -->to generate and verifty JWT token [cryp
 
 Once JWT Token setup is complete then able to protect endpoints by adding dependency (get_current_user: int =  Depends(oath2.get_current_user)) to other routes in function params to ensure that resource can only be accessed by authenticated/logged in users when they provide access JWT token.
 
+POSTMAN - ADVANCED FEATURES 
+Environment Variables - basically like using .env file. So you can easily switch between environments (that have different variables) eg. production, dev, test environments
+once variables set use them in req by putting variable name {{}} and setting the environment in the top right corner of the Postman app (so for eg. you can {{URL}}/post easily switches URL between different environments without having to change the URL in each req)
+
+Able to use code to automatically set an environment variable --> eg. access_token from login route
+--> use code to extract token from response and set it as an environment variable (so can use it in other reqs)
+--> in 'Tests' tab pm.environment.set("JWT", pm.response.json().access_token); then set {{JWT}} in Authorization tab
+this allows for dynamic updating of environment variables
+
+SETTING UP RELATIONSHIP BETWEEN POSTS-USERS tables
+User --> Post (1 to many relationship) - 1 user can have many posts
+need to create foreign key in Post table that references the id of the User table
 
 
 

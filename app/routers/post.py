@@ -36,7 +36,8 @@ def create_post(post: CreatePost, db: Session = Depends(get_db), auth_user: Toke
     db.add(new_post)
     db.commit()
     db.refresh(new_post) #similar to RETURNING
-    print(auth_user.user_id)
+    # print(auth_user.user_id)
+    print(auth_user.email)
     return new_post
 #UPDATE POST
 @router.put('/{post_id}')
