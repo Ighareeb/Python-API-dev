@@ -10,16 +10,18 @@ router = APIRouter(prefix='/posts/sqlalchemy', tags=['Posts'])
 # can use prefic param to simplify code when defining paths
 # tag param to group paths together in the FastAPI docs
 @router.get('/')
-def get_posts(db: Session = Depends(get_db)):
+def get_posts(db: Session = Depends(get_db), auth_user: TokenData = Depends(oauth2.get_current_user)):
     posts = db.query(models.Post).all()
+    print(auth_user.user_id)
     return posts
 
 # GET SINGLE POST BY ID
 @router.get('/{post_id}', response_model=resPost)
-def get_post(post_id: int, db: Session = Depends(get_db)):
+def get_post(post_id: int, db: Session = Depends(get_db), auth_user: TokenData = Depends(oauth2.get_current_user)):
     post = db.query(models.Post).filter(models.Post.id == post_id).first()
     if not post:
         raise HTTPException(status_code=404, detail=f'Post with id {post_id} not found')
+    print(auth_user.user_id)
     return post
 
 #CREATE NEW POST
@@ -38,13 +40,14 @@ def create_post(post: CreatePost, db: Session = Depends(get_db), auth_user: Toke
     return new_post
 #UPDATE POST
 @router.put('/{post_id}')
-def update_post(post_id: int, db: Session = Depends(get_db)):
+def update_post(post_id: int, db: Session = Depends(get_db), auth_user: TokenData = Depends(oauth2.get_current_user)):
     updated_post = db.query(models.Post).filter(models.Post.id == post_id).first()
     if not updated_post:
         raise HTTPException(status_code=404, detail=f'Post with id {post_id} not found')
     updated_post.title = 'Updated Post Title'
     db.commit()
     db.refresh(updated_post)
+    print(auth_user.user_id)
     return post_id
 
 # @router.put('/{post_id}')
@@ -59,11 +62,12 @@ def update_post(post_id: int, db: Session = Depends(get_db)):
 #     return{"data": f'Post with id {post_id} updated'}
 # #DELETE POST
 @router.delete('/{post_id}')
-def delete_post(post_id: int, db: Session = Depends(get_db)):
+def delete_post(post_id: int, db: Session = Depends(get_db), auth_user: TokenData = Depends(oauth2.get_current_user)):
     deleted_post = db.query(models.Post).filter(models.Post.id == post_id).first()
     if not deleted_post:
         raise HTTPException(status_code=404, detail=f'Post with id {post_id} not found')
     # deleted_post.delete(synchronize_session=False) #synchronize_session=False to avoid error -?not working properly?
     db.delete(deleted_post)
     db.commit()
+    print(auth_user.user_id)
     return post_id
