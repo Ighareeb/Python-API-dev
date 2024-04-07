@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 from pydantic import BaseModel, EmailStr
 
 from app.database import Base
@@ -51,9 +52,14 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
-# # Token schema model
-# class Token(BaseModel):
-#     access_token: str
-#     token_type: str
+# Token schema model
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+# define schema for Token payload data
+class TokenData(BaseModel):
+    user_id: Optional[str] = None
 
-    
+# auth.py
+# access_token = oauth2.create_access_token(data={"user_id": check_user.id}) 
+# {'access_token': access_token, 'token_type': 'bearer'}

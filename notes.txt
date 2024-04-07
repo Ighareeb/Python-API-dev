@@ -108,10 +108,9 @@ If user valid then token sent back to client.
 
 --create auth.py router (also created util function to hash password from req)
 pip install python-jose[cryptography] -->to generate and verifty JWT token [cryptography] BE
-pip install passlib[bcrypt] --> to hash passwords bcrypt algo
-(need to create a passlib context to hash pw)
+*NOT USEDpip install passlib[bcrypt] --> to hash passwords bcrypt algo (need to create a passlib context to hash pw)
 
-
+Once JWT Token setup is complete then able to protect endpoints by adding dependency (get_current_user: int =  Depends(oath2.get_current_user)) to other routes in function params to ensure that resource can only be accessed by authenticated/logged in users when they provide access JWT token.
 
 
 
