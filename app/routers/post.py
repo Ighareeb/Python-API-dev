@@ -1,9 +1,10 @@
 # GET ALL POSTS
-from app import models
+from app import models, oauth2
 from fastapi import FastAPI, HTTPException, Response, status, Depends, APIRouter
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.schemas import CreatePost, Post, resPost
+from app.routers import auth
+from app.schemas import CreatePost, Post, TokenData, resPost
 
 router = APIRouter(prefix='/posts/sqlalchemy', tags=['Posts'])
 # can use prefic param to simplify code when defining paths
@@ -28,11 +29,12 @@ def get_post(post_id: int, db: Session = Depends(get_db)):
 @router.post('/')
 # def create_post(db: Session = Depends(get_db)):
 #     new_post = models.Post(title='Test Posting new post', content='This is a test post', published=True)
-def create_post(post: CreatePost, db: Session = Depends(get_db)):
+def create_post(post: CreatePost, db: Session = Depends(get_db), auth_user: TokenData = Depends(oauth2.get_current_user)):
     new_post = models.Post(title=post.title, content=post.content, published=post.published)
     db.add(new_post)
     db.commit()
     db.refresh(new_post) #similar to RETURNING
+    print(auth_user.user_id)
     return new_post
 #UPDATE POST
 @router.put('/{post_id}')

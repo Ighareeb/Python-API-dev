@@ -58,7 +58,7 @@ class Token(BaseModel):
     token_type: str
 # define schema for Token payload data
 class TokenData(BaseModel):
-    user_id: Optional[str] = None
+    user_id: Optional[int] = None
 
 # auth.py
 # access_token = oauth2.create_access_token(data={"user_id": check_user.id}) 
